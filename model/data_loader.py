@@ -5,36 +5,66 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 
+from sklearn.utils import shuffle
+
 # borrowed from http://pytorch.org/tutorials/advanced/neural_style_tutorial.html
 # and http://pytorch.org/tutorials/beginner/data_loading_tutorial.html
 # define a training image loader that specifies transforms on images. See documentation for more details.
 train_transformer = transforms.Compose([
-    transforms.Resize(64),  # resize the image to 64x64 (remove if images are already 64x64)
+    transforms.RandomCrop(600),  # resize the image to 224x224 
     transforms.RandomHorizontalFlip(),  # randomly flip image horizontally
-    transforms.ToTensor()])  # transform it into a torch tensor
-
+    transforms.ToTensor()  # transform it into a torch tensor
+    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
+])
 # loader for evaluation, no horizontal flip
 eval_transformer = transforms.Compose([
-    transforms.Resize(64),  # resize the image to 64x64 (remove if images are already 64x64)
-    transforms.ToTensor()])  # transform it into a torch tensor
+    transforms.RandomCrop(600),  # resize the image to 224 
+    transforms.ToTensor()  # transform it into a torch tensor
+    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
 
-
-class SIGNSDataset(Dataset):
+class PhotoshopDataset(Dataset):
     """
     A standard PyTorch definition of Dataset which defines the functions __len__ and __getitem__.
     """
-    def __init__(self, data_dir, transform):
+    def __init__(self,  data_dir_original, data_dir_photoshopped, transform = train_transformer):
         """
         Store the filenames of the jpgs to use. Specifies transforms to apply on images.
 
         Args:
-            data_dir: (string) directory containing the dataset
+            data_dir_photoshopped: (string) directory containing the photoshopped images
+            data_dir_real: (string) directory containing the real images
             transform: (torchvision.transforms) transformation to apply on image
         """
-        self.filenames = os.listdir(data_dir)
-        self.filenames = [os.path.join(data_dir, f) for f in self.filenames if f.endswith('.jpg')]
-
-        self.labels = [int(os.path.split(filename)[-1][0]) for filename in self.filenames]
+        '''
+        Notes:
+        Would need to just save all the images and label them appropriately.
+        Need to figure out how to just extract 1 photoshop transformation fo reach image for each 
+        
+        '''
+        cwd  = os.path.dirname(os.path.realpath(__file__))
+        # Process Photoshopped Images
+        data_dir_photoshopped = os.path.join(cwd, '..', data_dir_photoshopped)
+        #print(data_dir_photoshopped)
+        p_filenames = os.listdir(data_dir_photoshopped)
+        p_filenames = [os.path.join(data_dir_photoshopped, f) for f in p_filenames if f.endswith('.jpg')]
+        p_labels = [1 for i in range(len(p_filenames))]
+        
+        # Process Original Images
+        data_dir_original = os.path.join(cwd,'..', data_dir_original)
+        o_filenames = os.listdir(data_dir_original)
+        o_filenames = [os.path.join(data_dir_original, f) for f in o_filenames if f.endswith('.jpg')]
+        o_labels = [0 for i in range(len(o_filenames))]
+        
+        # Add both types together
+        self.filenames = p_filenames + o_filenames
+        self.labels = p_labels + o_labels
+        
+        #randomly shuffle data
+#         mapIndexPosition = list(zip(filenames, labels))
+#         random.shuffle(mapIndexPosition)
+#         self.filenames, self.labels = zip(*mapIndexPosition)
+        self.filenames, self.labels =  shuffle(self.filenames, self.labels, random_state=42)
         self.transform = transform
 
     def __len__(self):
@@ -53,8 +83,10 @@ class SIGNSDataset(Dataset):
             label: (int) corresponding label of image
         """
         image = Image.open(self.filenames[idx])  # PIL image
-        image = self.transform(image)
-        return image, self.labels[idx]
+        tensor = self.transform(image)
+        #image = tensor
+        sample = {'image': image,  'label':self.labels[idx], 'tensor':tensor}
+        return sample
 
 
 def fetch_dataloader(types, data_dir, params):

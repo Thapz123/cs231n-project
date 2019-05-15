@@ -19,7 +19,7 @@ for index, photo in remaining_images.iterrows():
         url = available_sizes['sizes']['size'][-1]['source']
         print('+ %s' % photo_id)
     except flickrapi.exceptions.FlickrError as e:
-        print('%s - %s' % (photo_id, e), file=sys.stderr)
+        print('%s - %s' % (photo_id, e))
 
     row = pd.Series([photo_id, url], index=file_headers)
     urls_dataset = urls_dataset.append(row, ignore_index=True)
