@@ -4,30 +4,36 @@ import os
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
-
 from sklearn.utils import shuffle
-
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 # borrowed from http://pytorch.org/tutorials/advanced/neural_style_tutorial.html
 # and http://pytorch.org/tutorials/beginner/data_loading_tutorial.html
 # define a training image loader that specifies transforms on images. See documentation for more details.
-train_transformer = transforms.Compose([
-    transforms.RandomCrop(600),  # resize the image to 224x224 
-    transforms.RandomHorizontalFlip(),  # randomly flip image horizontally
-    transforms.ToTensor()  # transform it into a torch tensor
-    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
-])
-# loader for evaluation, no horizontal flip
-eval_transformer = transforms.Compose([
-    transforms.RandomCrop(600),  # resize the image to 224 
-    transforms.ToTensor()  # transform it into a torch tensor
-    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
 
+data_transforms ={
+    'train' : transforms.Compose([
+
+        transforms.RandomResizedCrop(299),  # resize the image to 299x299 
+        transforms.RandomHorizontalFlip(),  # randomly flip image horizontally
+        transforms.ToTensor(),  # transform it into a torch tensor
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ]),
+    # loader for evaluation, no horizontal flip
+    'val' : transforms.Compose([
+        transforms.CenterCrop(299),  # resize the image to 299x299
+        transforms.ToTensor(),  # transform it into a torch tensor
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+}
+
+IMAGE_SIZE = 299
 class PhotoshopDataset(Dataset):
     """
     A standard PyTorch definition of Dataset which defines the functions __len__ and __getitem__.
     """
-    def __init__(self,  data_dir_original, data_dir_photoshopped, transform = train_transformer):
+    def __init__(self,  data_dir_original, data_dir_photoshopped, transform = data_transforms['train']):
         """
         Store the filenames of the jpgs to use. Specifies transforms to apply on images.
 
@@ -60,10 +66,6 @@ class PhotoshopDataset(Dataset):
         self.filenames = p_filenames + o_filenames
         self.labels = p_labels + o_labels
         
-        #randomly shuffle data
-#         mapIndexPosition = list(zip(filenames, labels))
-#         random.shuffle(mapIndexPosition)
-#         self.filenames, self.labels = zip(*mapIndexPosition)
         self.filenames, self.labels =  shuffle(self.filenames, self.labels, random_state=42)
         self.transform = transform
 
@@ -82,10 +84,15 @@ class PhotoshopDataset(Dataset):
             image: (Tensor) transformed image
             label: (int) corresponding label of image
         """
+        ImageFile.LOAD_TRUNCATED_IMAGES = True
         image = Image.open(self.filenames[idx])  # PIL image
+        width, height = image.size
+        if width<IMAGE_SIZE or height<IMAGE_SIZE:
+            image = image.resize((IMAGE_SIZE+50, IMAGE_SIZE+50))
+            
+        image = image.convert('RGB')
         tensor = self.transform(image)
-        #image = tensor
-        sample = {'image': image,  'label':self.labels[idx], 'tensor':tensor}
+        sample = (tensor, self.labels[idx])
         return sample
 
 
