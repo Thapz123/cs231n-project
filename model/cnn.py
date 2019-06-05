@@ -70,7 +70,7 @@ class ConvNet(nn.Module):
 
             
 
-def cnn_classifier( dataloaders):
+def cnn_classifier(dataloaders, num_epochs = 25, lr=0.001,  step_size = 5,gamma=0.1):
     # Number of classes in the dataset
     num_classes = 2
 
@@ -78,7 +78,7 @@ def cnn_classifier( dataloaders):
     batch_size = 4
 
     # Number of epochs to train for
-    num_epochs = 25 
+  
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = ConvNet(num_classes).to(device)
     print("Params to learn:")
@@ -89,7 +89,7 @@ def cnn_classifier( dataloaders):
                 print("\t",name)
                 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(params_to_update, lr=0.001)
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+    optimizer = optim.Adam(params_to_update, lr=lr)
+    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
     model, hist = train_model(model, dataloaders, criterion, optimizer, exp_lr_scheduler,device, num_epochs=num_epochs, is_inception=False)
     return model, hist

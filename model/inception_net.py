@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore")
 
 
 
-def initialize_model(num_classes=2, feature_extract=True, use_pretrained=True):
+def initialize_model(lr=0.001, num_classes=2, feature_extract=True, use_pretrained=True):
     # Initialize these variables which will be set in this if statement. Each of these
     #   variables is model specific.
     model_ft = None
@@ -44,7 +44,7 @@ def set_parameter_requires_grad(model, feature_extracting):
             
             
 
-def inception_classifier( dataloaders,feature_extract=True, use_pretrained=True):
+def inception_classifier(  dataloaders, num_epochs = 25, lr=0.001,  step_size = 5,gamma=0.1, feature_extract=True, use_pretrained=True):
     # Number of classes in the dataset
     num_classes = 2
 
@@ -52,7 +52,7 @@ def inception_classifier( dataloaders,feature_extract=True, use_pretrained=True)
     batch_size = 4
 
     # Number of epochs to train for
-    num_epochs = 25
+    
 
     
     model, input_size = initialize_model(num_classes=num_classes, feature_extract=feature_extract, use_pretrained=use_pretrained)
@@ -74,8 +74,8 @@ def inception_classifier( dataloaders,feature_extract=True, use_pretrained=True)
                 print("\t",name)
                 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(params_to_update, lr=0.001)
-    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+    optimizer = optim.Adam(params_to_update, lr= lr)
+    exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
     model, hist = train_model(model, dataloaders, criterion, optimizer, exp_lr_scheduler,device, num_epochs=num_epochs, is_inception=True)
     return model, hist
 

@@ -14,7 +14,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 data_transforms ={
     'train' : transforms.Compose([
 
-        transforms.RandomResizedCrop(299),  # resize the image to 299x299 
+        transforms.CenterCrop(299),  # resize the image to 299x299 
         transforms.RandomHorizontalFlip(),  # randomly flip image horizontally
         transforms.ToTensor(),  # transform it into a torch tensor
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])

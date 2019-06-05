@@ -6,16 +6,15 @@ import shutil
 
 _size299 = (299,299)
 SMALLEST_DIM = 400
-OG_PATH = './originals_full/' #change depending dir containing orignals
-PH_PATH = './photoshops_full/' #change depending on dir containing photoshops
+OG_PATH = './originals_small/' #change depending dir containing orignals
+PH_PATH = './photoshops_small/' #change depending on dir containing photoshops
 PH_RESIZED_PATH = './photoshops_resized/'
 OG_RESIZED_PATH = './originals_resized/'
 OG_PATH_DEV = './originals100_dev/' #change depending dir containing orignals
 PH_PATH_DEV = './photoshops100_dev/'
 OG_RESIZED_PATH_DEV = './originals_dev_resized/'
 PH_RESIZED_PATH_DEV = './photoshops_dev_resized/'
-
-SIZE_THRESHOLD = 1000 #1000bytes
+SIZE_THRESHOLD = 100000 #100 KB
 
 
 
